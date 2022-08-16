@@ -1,0 +1,1 @@
+Practive Rust App for DigitalOcean
