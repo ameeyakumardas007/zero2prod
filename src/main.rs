@@ -1,4 +1,3 @@
-use secrecy::ExposeSecret;
 use sqlx::postgres::PgPoolOptions;
 use std::net::TcpListener;
 
@@ -13,9 +12,9 @@ async fn main() -> std::io::Result<()> {
 
     let configuration = get_configuration().expect("Failed to read configuration.");
     let connection_pool = PgPoolOptions::new()
-        .acquire_timeout(std::time::Duration::from_secs(2))
-        .connect_lazy(&configuration.database.connection_string().expose_secret())
-        .expect("Failed to create Postgres connection pool.");
+    .acquire_timeout(std::time::Duration::from_secs(2))
+    // `connect_lazy_with` instead of `connect_lazy`
+    .connect_lazy_with(configuration.database.with_db());
 
     // Here we choose to bind explicitly to localhost, 127.0.0.1, for security
     // reasons. This binding may cause issues in some environments. For example,
