@@ -8,3 +8,8 @@ database:
   password: "mindfire"
   database_name: "newsletter"
   require_ssl: false
+email_client:
+  base_url: "localhost"
+  sender_email: "test@gmail.com"
+  authorization_token: "43555a6d-08cc-4804-bab0-39cabafac421"
+  timeout_milliseconds: 10000
