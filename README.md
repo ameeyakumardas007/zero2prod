@@ -21,3 +21,11 @@ SET DATABASE_URL="postgresql://newsletter:AVNS_NJId_CNyiEHTB9fmLcT@app-aaae15c4-
 
 
 cargo check --all-targets
+
+Remember to apply the changes to DigitalOcean every time we touch spec.yaml: grab
+your app identifier via doctl apps list --format ID and then run doctl apps update
+$APP_ID --spec spec.yaml.
+
+SET RUST_LOG="sqlx=error,info" 
+SET TEST_LOG=enabled 
+cargo test subscribe_fails_if_there_is_a_fatal_database_error | bunyan
