@@ -29,3 +29,7 @@ $APP_ID --spec spec.yaml.
 SET RUST_LOG="sqlx=error,info" 
 SET TEST_LOG=enabled 
 cargo test subscribe_fails_if_there_is_a_fatal_database_error | bunyan
+
+To fix "too many files open" issue in Mac or Linux:
+ulimit -n ==> this will check the current value
+ulimit -n 4096 ==> this sets the current value to the supplied value.
