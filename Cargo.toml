@@ -33,7 +33,7 @@ tracing-bunyan-formatter = "0.3"
 tracing-log = "0.1"
 secrecy = { version = "0.8", features = ["serde"] }
 tracing-actix-web = "0.6"
-serde-aux = "3"
+serde-aux = "4"
 unicode-segmentation = "1"
 validator = "0.16"
 reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
@@ -42,6 +42,10 @@ thiserror = "1"
 anyhow = "1"
 base64 = "0.13"
 argon2 = { version = "0.4", features = ["std"] }
+urlencoding = "2"
+htmlescape = "0.3"
+hmac = { version = "0.12", features = ["std"] }
+sha2 = "0.10"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }
