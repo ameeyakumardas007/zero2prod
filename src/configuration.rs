@@ -5,6 +5,7 @@ use sqlx::ConnectOptions;
 use std::convert::{TryFrom, TryInto};
 
 use crate::domain::SubscriberEmail;
+use crate::startup::HmacSecret;
 
 #[derive(serde::Deserialize, Clone)]
 pub struct Settings {
@@ -19,6 +20,7 @@ pub struct ApplicationSettings {
     pub port: u16,
     pub host: String,
     pub base_url: String,
+    pub hmac_secret: HmacSecret,
 }
 
 #[derive(serde::Deserialize, Clone)]
