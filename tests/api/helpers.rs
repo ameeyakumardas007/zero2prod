@@ -1,4 +1,5 @@
 use argon2::password_hash::SaltString;
+use argon2::{Algorithm, Argon2, Params, PasswordHasher, Version};
 use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
@@ -7,7 +8,6 @@ use zero2prod::configuration::{get_configuration, DatabaseSettings};
 use zero2prod::startup::get_connection_pool;
 use zero2prod::startup::Application;
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
-use argon2::{Algorithm, Argon2, Params, PasswordHasher, Version};
 
 // Ensure that the `tracing` stack is only initialised once using `once_cell`
 static TRACING: Lazy<()> = Lazy::new(|| {
@@ -37,11 +37,12 @@ pub struct TestApp {
     pub email_server: MockServer,
     pub port: u16,
     pub test_user: TestUser,
+    pub api_client: reqwest::Client,
 }
 
 impl TestApp {
     pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
-        reqwest::Client::new()
+        self.api_client
             .post(&format!("{}/subscriptions", &self.address))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(body)
@@ -73,7 +74,7 @@ impl TestApp {
     }
 
     pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
-        reqwest::Client::new()
+        self.api_client
             .post(&format!("{}/newsletters", &self.address))
             // Random credentials!
             // `reqwest` does all the encoding/formatting heavy-lifting for us.
@@ -82,6 +83,42 @@ impl TestApp {
             .send()
             .await
             .expect("Failed to execute request.")
+    }
+
+    pub async fn post_login<Body>(&self, body: &Body) -> reqwest::Response
+    where
+        Body: serde::Serialize,
+    {
+        self.api_client
+            .post(&format!("{}/login", &self.address))
+            // This `reqwest` method makes sure that the body is URL-encoded
+            // and the `Content-Type` header is set accordingly.
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn get_login_html(&self) -> String {
+        self.api_client
+            .get(&format!("{}/login", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+            .text()
+            .await
+            .unwrap()
+    }
+
+    pub async fn get_admin_dashboard(&self) -> String {
+        self.api_client
+            .get(&format!("{}/admin/dashboard", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+            .text()
+            .await
+            .unwrap()
     }
 }
 
@@ -107,6 +144,13 @@ pub async fn spawn_app() -> TestApp {
         c
     };
 
+    // Rewest client
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .cookie_store(true)
+        .build()
+        .unwrap();
+
     // Create and migrate the database
     configure_database(&configuration.database).await;
 
@@ -123,6 +167,7 @@ pub async fn spawn_app() -> TestApp {
         db_pool: get_connection_pool(&configuration.database),
         email_server,
         test_user: TestUser::generate(),
+        api_client: client,
     };
 
     test_app.test_user.store(&test_app.db_pool).await;
@@ -187,4 +232,10 @@ impl TestUser {
         .await
         .expect("Failed to store test user.");
     }
+}
+
+// Little helper function - we will be doing this check several times thoughout
+pub fn assert_is_redirect_to(response: &reqwest::Response, location: &str) {
+    assert_eq!(response.status().as_u16(), 303);
+    assert_eq!(response.headers().get("Location").unwrap(), location);
 }

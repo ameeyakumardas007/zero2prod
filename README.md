@@ -33,3 +33,12 @@ cargo test subscribe_fails_if_there_is_a_fatal_database_error | bunyan
 To fix "too many files open" issue in Mac or Linux:
 ulimit -n ==> this will check the current value
 ulimit -n 4096 ==> this sets the current value to the supplied value.
+
+λ docker run --name zero2prod_redis -p 6379:6379 -d redis
+
+λ docker exec -it zero2prod_redis redis-cli
+127.0.0.1:6379> ping
+PONG
+127.0.0.1:6379> ping
+PONG
+127.0.0.1:6379>
